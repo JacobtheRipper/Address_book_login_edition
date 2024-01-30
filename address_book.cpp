@@ -8,6 +8,12 @@
 #define SAVE_FILE_NAME "address_book_database.txt"
 #define TEMP_FILE_NAME "temporary.txt"
 
+struct UserData {
+  int userID;
+  std::string username;
+  std::string password;
+};
+
 struct Contact
 {
   int ID;
