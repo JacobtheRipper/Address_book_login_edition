@@ -6,7 +6,7 @@
 
 #define MAX_INPUT_BUFFER_SIZE 256
 #define CONTACTS_SAVE_FILE_NAME "address_book_database.txt"
-#define USER_DATA_SAVE_FILE_NAME "user_data_database.txt"
+#define USER_DATA_SAVE_FILE_NAME "user_database.txt"
 #define TEMP_FILE_NAME "temporary.txt"
 
 struct UserData {
@@ -25,8 +25,8 @@ struct Contact {
 };
 
 void renderLoginMenu() {
-  std::cout << "\nPress \'1\' to login \n";
-  std::cout << "\nPress \'2\' to register \n";
+  std::cout << "\nPress \'1\' to login";
+  std::cout << "\nPress \'2\' to register";
   std::cout << "\nPress \'3\' to exit the program" << std::endl;
 }
 
@@ -108,7 +108,7 @@ std::string *splitContactDataByVerticalBars(const std::string &contactDataInFile
   return contactDataAfterSplitting;
 }
 
-std::string saveContactToSingleStringInNewFormat(const Contact &contactData) {
+std::string saveContactToSingleString(const Contact &contactData) {
   std::string output = std::string();
   char delimiterSign = '|';
 
@@ -257,7 +257,7 @@ void editContactInFile(const Contact &editedContactData) {
     pointerToContactData = splitContactDataByVerticalBars(fileLine);
 
     if (editedContactData.ID == std::stoi(pointerToContactData[0])) {
-      std::fputs(saveContactToSingleStringInNewFormat(editedContactData).c_str(), temporaryFilePointer);
+      std::fputs(saveContactToSingleString(editedContactData).c_str(), temporaryFilePointer);
     }
     else {
       std::fputs(fileLine.c_str(), temporaryFilePointer);
@@ -555,9 +555,7 @@ int main() {
       break;
 
     case LOGIN_MENU_OPTION_USER_REGISTER:
-      // TODO: Implement functionality. Remove line printing after testing.
       highestUserID = registerUser(users, highestUserID);
-      //std::cout << "\nAccount created.\n";
       std::system("pause");
       std::system("cls");
       break;
