@@ -476,67 +476,79 @@ void editContact(std::vector<Contact>& contacts) {
 
 void switchToUserLoggedInMenu(int loggedInUserID) {
   if (loggedInUserID == 0) {
+    std::cout << "\nUser is not logged in.\n";
     return;
   }
   
-  const char OPTION_ADD_CONTACTS = '1', OPTION_SEARCH_BY_NAME = '2';
-  const char OPTION_SEARCH_BY_SURNAME = '3', OPTION_LIST_CONTACTS = '4';
-  const char OPTION_DELETE_CONTACT = '5', OPTION_EDIT_CONTACT = '6';
-  const char OPTION_EXIT_PROGRAM = '9';
+  const char USER_LOGGED_IN_MENU_OPTION_ADD_CONTACTS = '1', USER_LOGGED_IN_MENU_OPTION_SEARCH_BY_NAME = '2';
+  const char USER_LOGGED_IN_MENU_OPTION_SEARCH_BY_SURNAME = '3', USER_LOGGED_IN_MENU_OPTION_LIST_CONTACTS = '4';
+  const char USER_LOGGED_IN_MENU_OPTION_DELETE_CONTACT = '5', USER_LOGGED_IN_MENU_OPTION_EDIT_CONTACT = '6';
+  const char USER_LOGGED_IN_MENU_OPTION_CHANGE_PASSWORD = '7', USER_LOGGED_IN_MENU_OPTION_LOGOUT = '8';
 
   std::vector<Contact> contacts;
   int highestContactID = readContactsFromFile(contacts);
 
-  int mainMenuOption;
-  bool exitingMainMenu = false;
+  int userLoggedInMenuOption;
+  bool exitingUserLoggedInMenu = false;
 
   std::system("cls");
   std::cout << "Hello, user.\n";
 
-  while (!exitingMainMenu) {
+  while (!exitingUserLoggedInMenu) {
     renderUserLoggedInMenu();
-    mainMenuOption = readCharacter();
+    userLoggedInMenuOption = readCharacter();
 
-    switch (mainMenuOption) {
-    case OPTION_ADD_CONTACTS:
+    switch (userLoggedInMenuOption) {
+    case USER_LOGGED_IN_MENU_OPTION_ADD_CONTACTS:
       highestContactID = addContact(contacts, highestContactID);
       printContactInfo(contacts.back());
       std::system("pause");
       std::system("cls");
       break;
 
-    case OPTION_SEARCH_BY_NAME:
+    case USER_LOGGED_IN_MENU_OPTION_SEARCH_BY_NAME:
       findContactByName(contacts);
       std::system("pause");
       std::system("cls");
       break;
 
-    case OPTION_SEARCH_BY_SURNAME:
+    case USER_LOGGED_IN_MENU_OPTION_SEARCH_BY_SURNAME:
       findContactBySurname(contacts);
       std::system("pause");
       std::system("cls");
       break;
 
-    case OPTION_LIST_CONTACTS:
+    case USER_LOGGED_IN_MENU_OPTION_LIST_CONTACTS:
       listContacts(contacts, highestContactID);
       std::system("pause");
       std::system("cls");
       break;
 
-    case OPTION_DELETE_CONTACT:
+    case USER_LOGGED_IN_MENU_OPTION_DELETE_CONTACT:
       highestContactID = deleteContact(contacts);
       std::system("pause");
       std::system("cls");
       break;
 
-    case OPTION_EDIT_CONTACT:
+    case USER_LOGGED_IN_MENU_OPTION_EDIT_CONTACT:
       editContact(contacts);
       std::system("pause");
       std::system("cls");
       break;
-
-    case OPTION_EXIT_PROGRAM:
-      exitingMainMenu = true;
+    
+    case USER_LOGGED_IN_MENU_OPTION_CHANGE_PASSWORD:
+      // TODO: Implement functionality. 
+      //changeUserPassword();
+      std::cout << "\nWork in progress. \n";
+      std::system("pause");
+      std::system("cls");
+      break;
+    
+    case USER_LOGGED_IN_MENU_OPTION_LOGOUT:
+      std::cout << "\nSuccessfully logged out. Have a good day, user!\n";
+      std::system("pause");
+      std::system("cls");
+      exitingUserLoggedInMenu = true;
       break;
 
     default:
