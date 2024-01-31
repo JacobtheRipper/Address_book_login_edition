@@ -5,8 +5,15 @@
 #include <regex>
 
 #define MAX_INPUT_BUFFER_SIZE 256
-#define SAVE_FILE_NAME "address_book_database.txt"
+#define CONTACTS_SAVE_FILE_NAME "address_book_database.txt"
+#define USER_DATA_SAVE_FILE_NAME "user_data_database.txt"
 #define TEMP_FILE_NAME "temporary.txt"
+
+struct UserData {
+  int userID;
+  std::string username;
+  std::string password;
+};
 
 struct Contact {
   int ID;
@@ -17,14 +24,21 @@ struct Contact {
   std::string address;
 };
 
-void renderMainMenu() {
+void renderLoginMenu() {
+  std::cout << "\nPress \'1\' to login \n";
+  std::cout << "\nPress \'2\' to register \n";
+  std::cout << "\nPress \'3\' to exit the program" << std::endl;
+}
+
+void renderUserLoggedInMenu() {
   std::cout << "\nPress \'1\' to add contact \n";
   std::cout << "Press \'2\' to search contacts by name \n";
   std::cout << "Press \'3\' to search contacts by surname \n";
   std::cout << "Press \'4\' to show the list of contacts \n";
-  std::cout << "Press \'5\' to delete a contact" << std::endl;
-  std::cout << "Press \'6\' to edit a contact" << std::endl;
-  std::cout << "Press \'9\' to exit the program" << std::endl;
+  std::cout << "Press \'5\' to delete a contact\n";
+  std::cout << "Press \'6\' to edit a contact\n";
+  std::cout << "Press \'7\' to change password\n";
+  std::cout << "Press \'8\' to logout" << std::endl;
 }
 
 void renderEditMenu() {
@@ -115,7 +129,7 @@ std::string saveContactToSingleStringInNewFormat(const Contact &contactData) {
 }
 
 void saveContactToFile(const Contact &contactData) {
-  FILE *filePointer = std::fopen(SAVE_FILE_NAME, "a");
+  FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "a");
   std::string contactDataToSave;
 
   if (filePointer == NULL) {
@@ -130,7 +144,7 @@ void saveContactToFile(const Contact &contactData) {
 }
 
 int readContactsFromFile(std::vector<Contact>& contacts) {
-  FILE *filePointer = std::fopen(SAVE_FILE_NAME, "r");
+  FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "r");
   Contact contactExtractedFromFile;
   std::string fileLine;
   std::string *pointerToContactData = nullptr;
@@ -163,7 +177,7 @@ int readContactsFromFile(std::vector<Contact>& contacts) {
 }
 
 void removeContactFromFile(int targetContactID) {
-  FILE *filePointer = std::fopen(SAVE_FILE_NAME, "r");
+  FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "r");
   FILE *temporaryFilePointer = std::fopen(TEMP_FILE_NAME, "a");
   std::string fileLine;
   std::string *pointerToContactData = nullptr;
@@ -190,12 +204,12 @@ void removeContactFromFile(int targetContactID) {
   std::fclose(filePointer);
   std::fclose(temporaryFilePointer);
 
-  std::remove(SAVE_FILE_NAME);
-  std::rename(TEMP_FILE_NAME, SAVE_FILE_NAME);
+  std::remove(CONTACTS_SAVE_FILE_NAME);
+  std::rename(TEMP_FILE_NAME, CONTACTS_SAVE_FILE_NAME);
 }
 
 void editContactInFile(const Contact &editedContactData) {
-  FILE *filePointer = std::fopen(SAVE_FILE_NAME, "r");
+  FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "r");
   FILE *temporaryFilePointer = std::fopen(TEMP_FILE_NAME, "a");
   std::string fileLine;
   std::string *pointerToContactData = nullptr;
@@ -225,8 +239,8 @@ void editContactInFile(const Contact &editedContactData) {
   std::fclose(filePointer);
   std::fclose(temporaryFilePointer);
 
-  std::remove(SAVE_FILE_NAME);
-  std::rename(TEMP_FILE_NAME, SAVE_FILE_NAME);
+  std::remove(CONTACTS_SAVE_FILE_NAME);
+  std::rename(TEMP_FILE_NAME, CONTACTS_SAVE_FILE_NAME);
 }
 
 void findContactByName(std::vector<Contact>& contacts) {
@@ -460,7 +474,55 @@ void editContact(std::vector<Contact>& contacts) {
   return;
 }
 
-int main() {
+int main()
+{
+  const char LOGIN_MENU_OPTION_USER_LOGIN = '1', LOGIN_MENU_OPTION_USER_REGISTER = '2';
+  const char LOGIN_MENU_OPTION_EXIT_PROGRAM = '3';
+
+  std::vector<UserData> users;
+  // TODO: Implement file reading and saving for user data
+  //int highestUserID = readUsersFromFile(users);
+
+  int loginMenuOption;
+  bool exitingLoginMenu = false;
+
+  std::system("cls");
+  std::cout << "Hello, user.\n";
+
+  while (!exitingLoginMenu) {
+    renderLoginMenu();
+    loginMenuOption = readCharacter();
+
+    switch (loginMenuOption) {
+    case LOGIN_MENU_OPTION_USER_LOGIN:
+      // TODO: Implement functionality. Remove line printing after testing.
+      //userID = loginUser();
+      std::cout << "\nSuccessfully logged in. Have good day, user!\n";
+      std::system("pause");
+      std::system("cls");
+      break;
+
+    case LOGIN_MENU_OPTION_USER_REGISTER:
+      // TODO: Implement functionality. Remove line printing after testing.
+      //highestUserID = RegisterUser();
+      std::cout << "\nAccount created.\n";
+      std::system("pause");
+      std::system("cls");
+      break;
+
+    case LOGIN_MENU_OPTION_EXIT_PROGRAM:
+      exitingLoginMenu = true;
+      break;
+
+    default:
+      std::cout << "\nIncorrect input. Please try again.\n";
+      std::system("pause");
+      std::system("cls");
+      break;
+    }
+  }
+  // TODO: Move to separate function, refactor and uncomment
+  /*
   const char OPTION_ADD_CONTACTS = '1', OPTION_SEARCH_BY_NAME = '2';
   const char OPTION_SEARCH_BY_SURNAME = '3', OPTION_LIST_CONTACTS = '4';
   const char OPTION_DELETE_CONTACT = '5', OPTION_EDIT_CONTACT = '6';
@@ -476,7 +538,7 @@ int main() {
   std::cout << "Hello, user.\n";
 
   while (!exitingMainMenu) {
-    renderMainMenu();
+    renderUserLoggedInMenu();
     mainMenuOption = readCharacter();
 
     switch (mainMenuOption) {
@@ -528,6 +590,7 @@ int main() {
       break;
     }
   }
+  */
 
   std::cout << "\nHave a good day, user!" << std::endl;
   std::system("pause");
