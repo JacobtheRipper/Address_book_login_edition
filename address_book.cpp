@@ -208,6 +208,37 @@ int readContactsFromFile(std::vector<Contact>& contacts) {
   return highestContactID;
 }
 
+int readUserDataFromFile(std::vector<UserData>& users) {
+  FILE *filePointer = std::fopen(USER_DATA_SAVE_FILE_NAME, "r");
+  UserData userExtractedFromFile;
+  std::string fileLine;
+  std::string *pointerToContactData = nullptr;
+  int highestUserID = 0;
+  char buffer[MAX_INPUT_BUFFER_SIZE];
+
+  if (filePointer == NULL) {
+    std::fclose(filePointer);
+    return highestUserID;
+  }
+
+  while (std::fgets(buffer, MAX_INPUT_BUFFER_SIZE, filePointer)) {
+    fileLine = std::string(buffer);
+    pointerToContactData = splitDataInFileByVerticalBars(fileLine, NUMBER_OF_MEMBERS_IN_USERDATA_STRUCT);
+
+    userExtractedFromFile.userID = std::stoi(pointerToContactData[0]);
+    userExtractedFromFile.username = pointerToContactData[1];
+    userExtractedFromFile.password = pointerToContactData[2];
+
+    users.push_back(userExtractedFromFile);
+    highestUserID = userExtractedFromFile.userID;
+    delete[] pointerToContactData;
+  }
+
+  std::fclose(filePointer);
+  return highestUserID;
+}
+
+// TODO: Test the function
 void removeContactFromFile(int targetContactID) {
   FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "r");
   FILE *temporaryFilePointer = std::fopen(TEMP_FILE_NAME, "a");
@@ -535,8 +566,7 @@ int main() {
   const char LOGIN_MENU_OPTION_EXIT_PROGRAM = '3';
 
   std::vector<UserData> users;
-  // TODO: Implement file reading and saving for user data
-  int highestUserID = 0; //readUsersFromFile(users);
+  int highestUserID = readUserDataFromFile(users);
 
   int loginMenuOption;
   bool exitingLoginMenu = false;
