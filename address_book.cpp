@@ -30,7 +30,7 @@ void renderLoginMenu()
 {
   std::cout << "\nPress \'1\' to login \n";
   std::cout << "\nPress \'2\' to register \n";
-  std::cout << "\nPress \'3\' to add contact" << std::endl;
+  std::cout << "\nPress \'3\' to exit the program" << std::endl;
 }
 
 void renderUserLoggedInMenu()
@@ -41,8 +41,8 @@ void renderUserLoggedInMenu()
   std::cout << "Press \'4\' to show the list of contacts \n";
   std::cout << "Press \'5\' to delete a contact\n";
   std::cout << "Press \'6\' to edit a contact\n";
-  std::cout << "Press \'7\' to logout\n";
-  std::cout << "Press \'8\' to exit the program" << std::endl;
+  std::cout << "Press \'7\' to change password\n";
+  std::cout << "Press \'8\' to logout" << std::endl;
 }
 
 void renderEditMenu()
