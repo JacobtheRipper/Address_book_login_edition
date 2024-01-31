@@ -267,8 +267,7 @@ void findContactBySurname(std::vector<Contact>& contacts) {
     std::cout << "\nContact not found." << std::endl;
 }
 
-int findContactByID(std::vector<Contact>& contacts)
-{
+int findContactByID(std::vector<Contact>& contacts) {
   int targetID;
   bool matchingIDFound = false;
 
