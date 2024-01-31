@@ -477,6 +477,8 @@ void editContact(std::vector<Contact>& contacts) {
 void switchToUserLoggedInMenu(int loggedInUserID) {
   if (loggedInUserID == 0) {
     std::cout << "\nUser is not logged in.\n";
+    std::system("pause");
+    std::system("cls");
     return;
   }
   
@@ -485,6 +487,7 @@ void switchToUserLoggedInMenu(int loggedInUserID) {
   const char USER_LOGGED_IN_MENU_OPTION_DELETE_CONTACT = '5', USER_LOGGED_IN_MENU_OPTION_EDIT_CONTACT = '6';
   const char USER_LOGGED_IN_MENU_OPTION_CHANGE_PASSWORD = '7', USER_LOGGED_IN_MENU_OPTION_LOGOUT = '8';
 
+  // TODO: Make sure that only contacts available to user are added
   std::vector<Contact> contacts;
   int highestContactID = readContactsFromFile(contacts);
 
@@ -492,7 +495,6 @@ void switchToUserLoggedInMenu(int loggedInUserID) {
   bool exitingUserLoggedInMenu = false;
 
   std::system("cls");
-  std::cout << "Hello, user.\n";
 
   while (!exitingUserLoggedInMenu) {
     renderUserLoggedInMenu();
@@ -567,7 +569,7 @@ int main() {
   std::vector<UserData> users;
   // TODO: Implement file reading and saving for user data
   //int highestUserID = readUsersFromFile(users);
-  int userID = 0;
+  int userID = 2;
 
   int loginMenuOption;
   bool exitingLoginMenu = false, userLoggedIn = false;
@@ -583,12 +585,16 @@ int main() {
     case LOGIN_MENU_OPTION_USER_LOGIN:
       // TODO: Implement functionality. Remove line printing after testing.
       //userID = loginUser();
+      if (userID != 0) {
+        userLoggedIn = true;
+      }
       std::cout << "\nSuccessfully logged in. Have a good day, user!\n";
       std::system("pause");
       std::system("cls");
 
       if (userLoggedIn) {
         switchToUserLoggedInMenu(userID);
+        userLoggedIn = false;
       }
       break;
 
