@@ -5,6 +5,9 @@
 #include <regex>
 
 #define MAX_INPUT_BUFFER_SIZE 256
+#define NUMBER_OF_MEMBERS_IN_USERDATA_STRUCT 3
+#define NUMBER_OF_MEMBERS_IN_CONTACT_STRUCT 6
+
 #define CONTACTS_SAVE_FILE_NAME "address_book_database.txt"
 #define USER_DATA_SAVE_FILE_NAME "user_database.txt"
 #define TEMP_FILE_NAME "temporary.txt"
@@ -90,11 +93,10 @@ void printEditedContactInfo(const Contact &contactData) {
 }
 
 // Remember to release memory allocated by the array of strings
-std::string *splitContactDataByVerticalBars(const std::string &contactDataInFile) {
+std::string *splitDataInFileByVerticalBars(const std::string &contactDataInFile, const int numberOfMembersInDataStructure) {
   int arrayIterator = 0;
-  const int NUMBER_OF_MEMBERS_IN_DATA_STRUCTURE = 6;
   char delimiterSign = '|';
-  std::string *contactDataAfterSplitting = new std::string[NUMBER_OF_MEMBERS_IN_DATA_STRUCTURE];
+  std::string *contactDataAfterSplitting = new std::string[numberOfMembersInDataStructure];
   std::size_t startOfWord = 0, endOfWord = contactDataInFile.find(delimiterSign);
 
   while (endOfWord != std::string::npos) {
@@ -103,7 +105,7 @@ std::string *splitContactDataByVerticalBars(const std::string &contactDataInFile
     endOfWord = contactDataInFile.find(delimiterSign, startOfWord);
     ++arrayIterator;
   }
-  contactDataAfterSplitting[NUMBER_OF_MEMBERS_IN_DATA_STRUCTURE - 1] += contactDataInFile.substr(startOfWord, endOfWord - startOfWord);
+  contactDataAfterSplitting[numberOfMembersInDataStructure - 1] += contactDataInFile.substr(startOfWord, endOfWord - startOfWord);
 
   return contactDataAfterSplitting;
 }
@@ -137,7 +139,6 @@ std::string saveUserDataToSingleString(const UserData &user) {
   output.append(user.username);
   output.push_back(delimiterSign);
   output.append(user.password);
-  output.push_back(delimiterSign);
   output.push_back('\n');
 
   return output;
@@ -173,6 +174,7 @@ void saveUserDataToFile(const UserData &user) {
   std::fclose(filePointer);
 }
 
+// TODO: Test the function
 int readContactsFromFile(std::vector<Contact>& contacts) {
   FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "r");
   Contact contactExtractedFromFile;
@@ -188,7 +190,7 @@ int readContactsFromFile(std::vector<Contact>& contacts) {
 
   while (std::fgets(buffer, MAX_INPUT_BUFFER_SIZE, filePointer)) {
     fileLine = std::string(buffer);
-    pointerToContactData = splitContactDataByVerticalBars(fileLine);
+    pointerToContactData = splitDataInFileByVerticalBars(fileLine, NUMBER_OF_MEMBERS_IN_CONTACT_STRUCT);
 
     contactExtractedFromFile.ID = std::stoi(pointerToContactData[0]);
     contactExtractedFromFile.name = pointerToContactData[1];
@@ -222,7 +224,7 @@ void removeContactFromFile(int targetContactID) {
 
   while (std::fgets(buffer, MAX_INPUT_BUFFER_SIZE, filePointer)) {
     fileLine = std::string(buffer);
-    pointerToContactData = splitContactDataByVerticalBars(fileLine);
+    pointerToContactData = splitDataInFileByVerticalBars(fileLine, NUMBER_OF_MEMBERS_IN_CONTACT_STRUCT);
 
     if (targetContactID != std::stoi(pointerToContactData[0])) {
       std::fputs(fileLine.c_str(), temporaryFilePointer);
@@ -238,6 +240,7 @@ void removeContactFromFile(int targetContactID) {
   std::rename(TEMP_FILE_NAME, CONTACTS_SAVE_FILE_NAME);
 }
 
+// TODO: Test the function
 void editContactInFile(const Contact &editedContactData) {
   FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "r");
   FILE *temporaryFilePointer = std::fopen(TEMP_FILE_NAME, "a");
@@ -254,7 +257,7 @@ void editContactInFile(const Contact &editedContactData) {
 
   while (std::fgets(buffer, MAX_INPUT_BUFFER_SIZE, filePointer)) {
     fileLine = std::string(buffer);
-    pointerToContactData = splitContactDataByVerticalBars(fileLine);
+    pointerToContactData = splitDataInFileByVerticalBars(fileLine, NUMBER_OF_MEMBERS_IN_CONTACT_STRUCT);
 
     if (editedContactData.ID == std::stoi(pointerToContactData[0])) {
       std::fputs(saveContactToSingleString(editedContactData).c_str(), temporaryFilePointer);
