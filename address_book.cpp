@@ -128,6 +128,21 @@ std::string saveContactToSingleStringInNewFormat(const Contact &contactData) {
   return output;
 }
 
+std::string saveUserDataToSingleString(const UserData &user) {
+  std::string output = std::string();
+  char delimiterSign = '|';
+
+  output.append(std::to_string(user.userID));
+  output.push_back(delimiterSign);
+  output.append(user.username);
+  output.push_back(delimiterSign);
+  output.append(user.password);
+  output.push_back(delimiterSign);
+  output.push_back('\n');
+
+  return output;
+}
+
 void saveContactToFile(const Contact &contactData) {
   FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "a");
   std::string contactDataToSave;
@@ -137,9 +152,24 @@ void saveContactToFile(const Contact &contactData) {
     return;
   }
 
-  contactDataToSave = saveContactToSingleStringInNewFormat(contactData);
+  contactDataToSave = saveContactToSingleString(contactData);
 
   std::fputs(contactDataToSave.c_str(), filePointer);
+  std::fclose(filePointer);
+}
+
+void saveUserDataToFile(const UserData &user) {
+  FILE *filePointer = std::fopen(USER_DATA_SAVE_FILE_NAME, "a");
+  std::string userDataToSave;
+
+  if (filePointer == NULL) {
+    std::cout << "\nError opening file." << std::endl;
+    return;
+  }
+
+  userDataToSave = saveUserDataToSingleString(user);
+
+  std::fputs(userDataToSave.c_str(), filePointer);
   std::fclose(filePointer);
 }
 
@@ -369,6 +399,29 @@ int addContact(std::vector<Contact>& contacts, int highestContactID) {
   return ++highestContactID;
 }
 
+int registerUser(std::vector<UserData>& users, int highestUserID) {
+  UserData userToBeAdded;
+  std::string username, userPassword;
+
+  std::cout << "\nEnter username. Press \'Enter\' to continue.\n";
+  username = readLine();
+  userToBeAdded.username = username;
+
+  // TODO: Check if username exists
+
+  std::cout << "\nEnter password. Press \'Enter\' to continue.\n";
+  userPassword = readLine();
+  userToBeAdded.password = userPassword;
+
+  userToBeAdded.userID = highestUserID + 1;
+
+  saveUserDataToFile(userToBeAdded);
+
+  std::cout << "\nAccount created.\n";
+  users.push_back(userToBeAdded);
+  return ++highestUserID;
+}
+
 int deleteContact(std::vector<Contact>& contacts) {
   int contactID = findContactByID(contacts), contactIndex;
   char userInput = NULL;
@@ -474,14 +527,13 @@ void editContact(std::vector<Contact>& contacts) {
   return;
 }
 
-int main()
-{
+int main() {
   const char LOGIN_MENU_OPTION_USER_LOGIN = '1', LOGIN_MENU_OPTION_USER_REGISTER = '2';
   const char LOGIN_MENU_OPTION_EXIT_PROGRAM = '3';
 
   std::vector<UserData> users;
   // TODO: Implement file reading and saving for user data
-  //int highestUserID = readUsersFromFile(users);
+  int highestUserID = 0; //readUsersFromFile(users);
 
   int loginMenuOption;
   bool exitingLoginMenu = false;
@@ -504,8 +556,8 @@ int main()
 
     case LOGIN_MENU_OPTION_USER_REGISTER:
       // TODO: Implement functionality. Remove line printing after testing.
-      //highestUserID = RegisterUser();
-      std::cout << "\nAccount created.\n";
+      highestUserID = registerUser(users, highestUserID);
+      //std::cout << "\nAccount created.\n";
       std::system("pause");
       std::system("cls");
       break;
