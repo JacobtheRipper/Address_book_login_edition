@@ -539,7 +539,7 @@ void switchToUserLoggedInMenu(int loggedInUserID) {
     case USER_LOGGED_IN_MENU_OPTION_CHANGE_PASSWORD:
       // TODO: Implement functionality. 
       //changeUserPassword();
-      std::cout << "\nWork in progress. \n";
+      std::cout << "\nWork in progress. Functionality to change user password will be implemented soon.\n";
       std::system("pause");
       std::system("cls");
       break;
@@ -583,7 +583,7 @@ int main() {
     case LOGIN_MENU_OPTION_USER_LOGIN:
       // TODO: Implement functionality. Remove line printing after testing.
       //userID = loginUser();
-      std::cout << "\nSuccessfully logged in. Have good day, user!\n";
+      std::cout << "\nSuccessfully logged in. Have a good day, user!\n";
       std::system("pause");
       std::system("cls");
 
