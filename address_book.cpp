@@ -530,7 +530,54 @@ void editContact(std::vector<Contact>& contacts)
 
 int main()
 {
-  // TODO: Move to separate function and uncomment
+  const char LOGIN_MENU_OPTION_USER_LOGIN = '1', LOGIN_MENU_OPTION_USER_REGISTER = '2';
+  const char LOGIN_MENU_OPTION_EXIT_PROGRAM = '3';
+
+  std::vector<UserData> users;
+  // TODO: Implement file reading and saving for user data
+  //int highestUserID = readUsersFromFile(users);
+
+  int loginMenuOption;
+  bool exitingLoginMenu = false;
+
+  std::system("cls");
+  std::cout << "Hello, user.\n";
+
+  while (!exitingLoginMenu)
+  {
+    renderLoginMenu();
+    loginMenuOption = readCharacter();
+
+    switch (loginMenuOption)
+    {
+    case LOGIN_MENU_OPTION_USER_LOGIN:
+      // TODO: Implement functionality. Remove line printing after testing.
+      //userID = loginUser();
+      std::cout << "\nSuccessfully logged in. Have good day, user!\n";
+      std::system("pause");
+      std::system("cls");
+      break;
+
+    case LOGIN_MENU_OPTION_USER_REGISTER:
+      // TODO: Implement functionality. Remove line printing after testing.
+      //highestUserID = RegisterUser();
+      std::cout << "\nAccount created.\n";
+      std::system("pause");
+      std::system("cls");
+      break;
+
+    case LOGIN_MENU_OPTION_EXIT_PROGRAM:
+      exitingLoginMenu = true;
+      break;
+
+    default:
+      std::cout << "\nIncorrect input. Please try again.\n";
+      std::system("pause");
+      std::system("cls");
+      break;
+    }
+  }
+  // TODO: Move to separate function, refactor and uncomment
   /*
   const char OPTION_ADD_CONTACTS = '1', OPTION_SEARCH_BY_NAME = '2';
   const char OPTION_SEARCH_BY_SURNAME = '3', OPTION_LIST_CONTACTS = '4';
