@@ -393,6 +393,16 @@ void listContacts(std::vector<Contact>& contacts, int highestContactID) {
   }
 }
 
+bool usernameExists(std::vector<UserData>& users, const std::string &usernameToCheck) {
+  for (UserData user: users) {
+    if (user.username == usernameToCheck) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 int addContact(std::vector<Contact>& contacts, int highestContactID) {
   std::regex emailRegex("(\\w+)(\\._)?(\\w*)@(\\w+)(\\.(\\w+))+");
   Contact contactToBeAdded;
@@ -441,8 +451,11 @@ int registerUser(std::vector<UserData>& users, int highestUserID) {
   username = readLine();
   userToBeAdded.username = username;
 
-  // TODO: Check if username exists
-
+  if (usernameExists(users, username)) {
+    std::cout << "Username already taken. Please try again\n";
+    return highestUserID;
+  }
+  
   std::cout << "\nEnter password. Press \'Enter\' to continue.\n";
   userPassword = readLine();
   userToBeAdded.password = userPassword;
