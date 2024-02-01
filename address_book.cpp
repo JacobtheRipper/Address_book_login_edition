@@ -393,16 +393,6 @@ void listContacts(std::vector<Contact>& contacts, int highestContactID) {
   }
 }
 
-bool usernameExists(std::vector<UserData>& users, const std::string &usernameToCheck) {
-  for (UserData user: users) {
-    if (user.username == usernameToCheck) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 int addContact(std::vector<Contact>& contacts, int highestContactID) {
   std::regex emailRegex("(\\w+)(\\._)?(\\w*)@(\\w+)(\\.(\\w+))+");
   Contact contactToBeAdded;
@@ -441,32 +431,6 @@ int addContact(std::vector<Contact>& contacts, int highestContactID) {
   std::cout << "\nContact added." << std::endl;
   contacts.push_back(contactToBeAdded);
   return ++highestContactID;
-}
-
-int registerUser(std::vector<UserData>& users, int highestUserID) {
-  UserData userToBeAdded;
-  std::string username, userPassword;
-
-  std::cout << "\nEnter username. Press \'Enter\' to continue.\n";
-  username = readLine();
-  userToBeAdded.username = username;
-
-  if (usernameExists(users, username)) {
-    std::cout << "Username already taken. Please try again\n";
-    return highestUserID;
-  }
-  
-  std::cout << "\nEnter password. Press \'Enter\' to continue.\n";
-  userPassword = readLine();
-  userToBeAdded.password = userPassword;
-
-  userToBeAdded.userID = highestUserID + 1;
-
-  saveUserDataToFile(userToBeAdded);
-
-  std::cout << "\nAccount created.\n";
-  users.push_back(userToBeAdded);
-  return ++highestUserID;
 }
 
 int deleteContact(std::vector<Contact>& contacts) {
