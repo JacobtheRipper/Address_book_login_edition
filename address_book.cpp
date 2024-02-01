@@ -5,8 +5,11 @@
 #include <regex>
 
 #define MAX_INPUT_BUFFER_SIZE 256
+#define NUMBER_OF_MEMBERS_IN_USERDATA_STRUCT 3
+#define NUMBER_OF_MEMBERS_IN_CONTACT_STRUCT 6
+
 #define CONTACTS_SAVE_FILE_NAME "address_book_database.txt"
-#define USER_DATA_SAVE_FILE_NAME "user_data_database.txt"
+#define USER_DATA_SAVE_FILE_NAME "user_database.txt"
 #define TEMP_FILE_NAME "temporary.txt"
 
 struct UserData {
@@ -25,8 +28,8 @@ struct Contact {
 };
 
 void renderLoginMenu() {
-  std::cout << "\nPress \'1\' to login \n";
-  std::cout << "\nPress \'2\' to register \n";
+  std::cout << "\nPress \'1\' to login";
+  std::cout << "\nPress \'2\' to register";
   std::cout << "\nPress \'3\' to exit the program" << std::endl;
 }
 
@@ -90,11 +93,10 @@ void printEditedContactInfo(const Contact &contactData) {
 }
 
 // Remember to release memory allocated by the array of strings
-std::string *splitContactDataByVerticalBars(const std::string &contactDataInFile) {
+std::string *splitDataInFileByVerticalBars(const std::string &contactDataInFile, const int numberOfMembersInDataStructure) {
   int arrayIterator = 0;
-  const int NUMBER_OF_MEMBERS_IN_DATA_STRUCTURE = 6;
   char delimiterSign = '|';
-  std::string *contactDataAfterSplitting = new std::string[NUMBER_OF_MEMBERS_IN_DATA_STRUCTURE];
+  std::string *contactDataAfterSplitting = new std::string[numberOfMembersInDataStructure];
   std::size_t startOfWord = 0, endOfWord = contactDataInFile.find(delimiterSign);
 
   while (endOfWord != std::string::npos) {
@@ -103,12 +105,13 @@ std::string *splitContactDataByVerticalBars(const std::string &contactDataInFile
     endOfWord = contactDataInFile.find(delimiterSign, startOfWord);
     ++arrayIterator;
   }
-  contactDataAfterSplitting[NUMBER_OF_MEMBERS_IN_DATA_STRUCTURE - 1] += contactDataInFile.substr(startOfWord, endOfWord - startOfWord);
+  contactDataAfterSplitting[numberOfMembersInDataStructure - 1] += contactDataInFile.substr(startOfWord, endOfWord - startOfWord);
+  contactDataAfterSplitting[numberOfMembersInDataStructure - 1].pop_back();
 
   return contactDataAfterSplitting;
 }
 
-std::string saveContactToSingleStringInNewFormat(const Contact &contactData) {
+std::string saveContactToSingleString(const Contact &contactData) {
   std::string output = std::string();
   char delimiterSign = '|';
 
@@ -128,6 +131,20 @@ std::string saveContactToSingleStringInNewFormat(const Contact &contactData) {
   return output;
 }
 
+std::string saveUserDataToSingleString(const UserData &user) {
+  std::string output = std::string();
+  char delimiterSign = '|';
+
+  output.append(std::to_string(user.userID));
+  output.push_back(delimiterSign);
+  output.append(user.username);
+  output.push_back(delimiterSign);
+  output.append(user.password);
+  output.push_back('\n');
+
+  return output;
+}
+
 void saveContactToFile(const Contact &contactData) {
   FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "a");
   std::string contactDataToSave;
@@ -137,12 +154,28 @@ void saveContactToFile(const Contact &contactData) {
     return;
   }
 
-  contactDataToSave = saveContactToSingleStringInNewFormat(contactData);
+  contactDataToSave = saveContactToSingleString(contactData);
 
   std::fputs(contactDataToSave.c_str(), filePointer);
   std::fclose(filePointer);
 }
 
+void saveUserDataToFile(const UserData &user) {
+  FILE *filePointer = std::fopen(USER_DATA_SAVE_FILE_NAME, "a");
+  std::string userDataToSave;
+
+  if (filePointer == NULL) {
+    std::cout << "\nError opening file." << std::endl;
+    return;
+  }
+
+  userDataToSave = saveUserDataToSingleString(user);
+
+  std::fputs(userDataToSave.c_str(), filePointer);
+  std::fclose(filePointer);
+}
+
+// TODO: Test the function
 int readContactsFromFile(std::vector<Contact>& contacts) {
   FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "r");
   Contact contactExtractedFromFile;
@@ -158,7 +191,7 @@ int readContactsFromFile(std::vector<Contact>& contacts) {
 
   while (std::fgets(buffer, MAX_INPUT_BUFFER_SIZE, filePointer)) {
     fileLine = std::string(buffer);
-    pointerToContactData = splitContactDataByVerticalBars(fileLine);
+    pointerToContactData = splitDataInFileByVerticalBars(fileLine, NUMBER_OF_MEMBERS_IN_CONTACT_STRUCT);
 
     contactExtractedFromFile.ID = std::stoi(pointerToContactData[0]);
     contactExtractedFromFile.name = pointerToContactData[1];
@@ -176,6 +209,37 @@ int readContactsFromFile(std::vector<Contact>& contacts) {
   return highestContactID;
 }
 
+int readUserDataFromFile(std::vector<UserData>& users) {
+  FILE *filePointer = std::fopen(USER_DATA_SAVE_FILE_NAME, "r");
+  UserData userExtractedFromFile;
+  std::string fileLine;
+  std::string *pointerToContactData = nullptr;
+  int highestUserID = 0;
+  char buffer[MAX_INPUT_BUFFER_SIZE];
+
+  if (filePointer == NULL) {
+    std::fclose(filePointer);
+    return highestUserID;
+  }
+
+  while (std::fgets(buffer, MAX_INPUT_BUFFER_SIZE, filePointer)) {
+    fileLine = std::string(buffer);
+    pointerToContactData = splitDataInFileByVerticalBars(fileLine, NUMBER_OF_MEMBERS_IN_USERDATA_STRUCT);
+
+    userExtractedFromFile.userID = std::stoi(pointerToContactData[0]);
+    userExtractedFromFile.username = pointerToContactData[1];
+    userExtractedFromFile.password = pointerToContactData[2];
+
+    users.push_back(userExtractedFromFile);
+    highestUserID = userExtractedFromFile.userID;
+    delete[] pointerToContactData;
+  }
+
+  std::fclose(filePointer);
+  return highestUserID;
+}
+
+// TODO: Test the function
 void removeContactFromFile(int targetContactID) {
   FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "r");
   FILE *temporaryFilePointer = std::fopen(TEMP_FILE_NAME, "a");
@@ -192,7 +256,7 @@ void removeContactFromFile(int targetContactID) {
 
   while (std::fgets(buffer, MAX_INPUT_BUFFER_SIZE, filePointer)) {
     fileLine = std::string(buffer);
-    pointerToContactData = splitContactDataByVerticalBars(fileLine);
+    pointerToContactData = splitDataInFileByVerticalBars(fileLine, NUMBER_OF_MEMBERS_IN_CONTACT_STRUCT);
 
     if (targetContactID != std::stoi(pointerToContactData[0])) {
       std::fputs(fileLine.c_str(), temporaryFilePointer);
@@ -208,6 +272,7 @@ void removeContactFromFile(int targetContactID) {
   std::rename(TEMP_FILE_NAME, CONTACTS_SAVE_FILE_NAME);
 }
 
+// TODO: Test the function
 void editContactInFile(const Contact &editedContactData) {
   FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "r");
   FILE *temporaryFilePointer = std::fopen(TEMP_FILE_NAME, "a");
@@ -224,10 +289,10 @@ void editContactInFile(const Contact &editedContactData) {
 
   while (std::fgets(buffer, MAX_INPUT_BUFFER_SIZE, filePointer)) {
     fileLine = std::string(buffer);
-    pointerToContactData = splitContactDataByVerticalBars(fileLine);
+    pointerToContactData = splitDataInFileByVerticalBars(fileLine, NUMBER_OF_MEMBERS_IN_CONTACT_STRUCT);
 
     if (editedContactData.ID == std::stoi(pointerToContactData[0])) {
-      std::fputs(saveContactToSingleStringInNewFormat(editedContactData).c_str(), temporaryFilePointer);
+      std::fputs(saveContactToSingleString(editedContactData).c_str(), temporaryFilePointer);
     }
     else {
       std::fputs(fileLine.c_str(), temporaryFilePointer);
@@ -562,14 +627,99 @@ void switchToUserLoggedInMenu(int loggedInUserID) {
   }
 }
 
+bool usernameExists(std::vector<UserData>& users, const std::string &usernameToCheck) {
+  for (UserData user: users) {
+    if (user.username == usernameToCheck) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+int getUserIDByUsername(std::vector<UserData>& users, const std::string &usernameToCheck) {
+  for (UserData user: users) {
+    if (user.username == usernameToCheck) {
+      return user.userID;
+    }
+  }
+
+  return 0;
+}
+
+int getUserDataIndexByID(std::vector<UserData>& users, int targetUserID) {
+  for (int i = 0; i < users.size(); i++) {
+    if (users.at(i).userID == targetUserID) {
+      return i;
+    }
+  }
+  
+  return users.size();
+}
+
+int registerUser(std::vector<UserData>& users, int highestUserID) {
+  UserData userToBeAdded;
+  std::string username, userPassword;
+
+  std::cout << "\nEnter username. Press \'Enter\' to continue.\n";
+  username = readLine();
+  userToBeAdded.username = username;
+
+  if (usernameExists(users, username)) {
+    std::cout << "Username already taken. Please try again\n";
+    return highestUserID;
+  }
+  
+  std::cout << "\nEnter password. Press \'Enter\' to continue.\n";
+  userPassword = readLine();
+  userToBeAdded.password = userPassword;
+
+  userToBeAdded.userID = highestUserID + 1;
+
+  saveUserDataToFile(userToBeAdded);
+
+  std::cout << "\nAccount created.\n";
+  users.push_back(userToBeAdded);
+  return ++highestUserID;
+}
+
+int loginUser(std::vector<UserData>& users, int highestUserID) {
+  int loggedInUserID = 0, userDataIndex;
+  std::string username, userPassword;
+
+  if (highestUserID == 0) {
+    std::cout << "\nNo users in the database." << std::endl;
+    return loggedInUserID;
+  }
+
+  std::cout << "\nEnter username. Press \'Enter\' to continue.\n";
+  username = readLine();
+
+  if (!usernameExists(users, username)) {
+    std::cout << "\nUsername is incorrect. Please try again\n";
+    return loggedInUserID;
+  }
+  
+  loggedInUserID = getUserIDByUsername(users, username);
+  userDataIndex = getUserDataIndexByID(users, loggedInUserID);
+
+  std::cout << "\nEnter password. Press \'Enter\' to continue.\n";
+  userPassword = readLine();
+
+  if (userPassword != users[userDataIndex].password) {
+    std::cout << "\nPassword is incorrect. Please try again\n";
+    loggedInUserID = 0;
+  }
+
+  return loggedInUserID;
+}
+
 int main() {
   const char LOGIN_MENU_OPTION_USER_LOGIN = '1', LOGIN_MENU_OPTION_USER_REGISTER = '2';
   const char LOGIN_MENU_OPTION_EXIT_PROGRAM = '3';
 
   std::vector<UserData> users;
-  // TODO: Implement file reading and saving for user data
-  //int highestUserID = readUsersFromFile(users);
-  int userID = 2;
+  int highestUserID = readUserDataFromFile(users), loggedInUserID = 0;
 
   int loginMenuOption;
   bool exitingLoginMenu = false, userLoggedIn = false;
@@ -583,25 +733,24 @@ int main() {
 
     switch (loginMenuOption) {
     case LOGIN_MENU_OPTION_USER_LOGIN:
-      // TODO: Implement functionality. Remove line printing after testing.
-      //userID = loginUser();
-      if (userID != 0) {
+      loggedInUserID = loginUser(users, highestUserID);
+      if (loggedInUserID != 0) {
         userLoggedIn = true;
+        std::cout << "\nSuccessfully logged in. Have a good day, user!\n";
       }
-      std::cout << "\nSuccessfully logged in. Have a good day, user!\n";
+      
       std::system("pause");
       std::system("cls");
 
       if (userLoggedIn) {
-        switchToUserLoggedInMenu(userID);
+        switchToUserLoggedInMenu(loggedInUserID);
+        loggedInUserID = 0;
         userLoggedIn = false;
       }
       break;
 
     case LOGIN_MENU_OPTION_USER_REGISTER:
-      // TODO: Implement functionality. Remove line printing after testing.
-      //highestUserID = RegisterUser();
-      std::cout << "\nAccount created.\n";
+      highestUserID = registerUser(users, highestUserID);
       std::system("pause");
       std::system("cls");
       break;
