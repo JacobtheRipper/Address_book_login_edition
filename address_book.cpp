@@ -106,6 +106,7 @@ std::string *splitDataInFileByVerticalBars(const std::string &contactDataInFile,
     ++arrayIterator;
   }
   contactDataAfterSplitting[numberOfMembersInDataStructure - 1] += contactDataInFile.substr(startOfWord, endOfWord - startOfWord);
+  contactDataAfterSplitting[numberOfMembersInDataStructure - 1].pop_back();
 
   return contactDataAfterSplitting;
 }
