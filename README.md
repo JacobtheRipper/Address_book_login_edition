@@ -4,9 +4,9 @@ Working on branches practice
 
 # Features
 - User interface in OS terminal
-- User registration to the program (WIP)
-- User Login to the program (WIP)
-- Saving & reading user data into and from a save file (WIP)
+- User registration to the program
+- User Login to the program
+- Saving & reading user data into and from a save file
 - Option to change user password (WIP)
 - Displaying contacts only available to or created by a user (WIP)  
 - Adding new contacts to a local address book
