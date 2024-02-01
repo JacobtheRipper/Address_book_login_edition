@@ -6,7 +6,7 @@
 
 #define MAX_INPUT_BUFFER_SIZE 256
 #define NUMBER_OF_MEMBERS_IN_USERDATA_STRUCT 3
-#define NUMBER_OF_MEMBERS_IN_CONTACT_STRUCT 6
+#define NUMBER_OF_MEMBERS_IN_CONTACT_STRUCT 7
 
 #define CONTACTS_SAVE_FILE_NAME "address_book_database.txt"
 #define USER_DATA_SAVE_FILE_NAME "user_database.txt"
@@ -19,7 +19,8 @@ struct UserData {
 };
 
 struct Contact {
-  int ID;
+  int contactID;
+  int userID;
   std::string name;
   std::string surname;
   std::string phoneNumber;
@@ -78,7 +79,7 @@ char readCharacter() {
 }
 
 void printContactInfo(const Contact &contactData) {
-  std::cout << "ID: " << contactData.ID << '\n';
+  std::cout << "ID: " << contactData.contactID << '\n';
   std::cout << "Name: " << contactData.name << '\n';
   std::cout << "Surname: " << contactData.surname << '\n';
   std::cout << "Phone Number: " << contactData.phoneNumber << '\n';
@@ -87,7 +88,7 @@ void printContactInfo(const Contact &contactData) {
 }
 
 void printEditedContactInfo(const Contact &contactData) {
-  std::cout << "\nNew contact data for contact with ID: " << contactData.ID << '\n';
+  std::cout << "\nNew contact data for contact with ID: " << contactData.contactID << '\n';
   printContactInfo(contactData);
   std::cout << "\nReturning to editing menu.\n";
 }
@@ -115,7 +116,9 @@ std::string saveContactToSingleString(const Contact &contactData) {
   std::string output = std::string();
   char delimiterSign = '|';
 
-  output.append(std::to_string(contactData.ID));
+  output.append(std::to_string(contactData.contactID));
+  output.push_back(delimiterSign);
+  output.append(std::to_string(contactData.userID));
   output.push_back(delimiterSign);
   output.append(contactData.name);
   output.push_back(delimiterSign);
@@ -192,16 +195,16 @@ int readContactsFromFile(std::vector<Contact>& contacts) {
   while (std::fgets(buffer, MAX_INPUT_BUFFER_SIZE, filePointer)) {
     fileLine = std::string(buffer);
     pointerToContactData = splitDataInFileByVerticalBars(fileLine, NUMBER_OF_MEMBERS_IN_CONTACT_STRUCT);
-
-    contactExtractedFromFile.ID = std::stoi(pointerToContactData[0]);
-    contactExtractedFromFile.name = pointerToContactData[1];
-    contactExtractedFromFile.surname = pointerToContactData[2];
-    contactExtractedFromFile.phoneNumber = pointerToContactData[3];
-    contactExtractedFromFile.email = pointerToContactData[4];
-    contactExtractedFromFile.address = pointerToContactData[5];
+    contactExtractedFromFile.contactID = std::stoi(pointerToContactData[0]);
+    contactExtractedFromFile.userID = std::stoi(pointerToContactData[1]);
+    contactExtractedFromFile.name = pointerToContactData[2];
+    contactExtractedFromFile.surname = pointerToContactData[3];
+    contactExtractedFromFile.phoneNumber = pointerToContactData[4];
+    contactExtractedFromFile.email = pointerToContactData[5];
+    contactExtractedFromFile.address = pointerToContactData[6];
 
     contacts.push_back(contactExtractedFromFile);
-    highestContactID = contactExtractedFromFile.ID;
+    highestContactID = contactExtractedFromFile.contactID;
     delete[] pointerToContactData;
   }
 
@@ -291,7 +294,7 @@ void editContactInFile(const Contact &editedContactData) {
     fileLine = std::string(buffer);
     pointerToContactData = splitDataInFileByVerticalBars(fileLine, NUMBER_OF_MEMBERS_IN_CONTACT_STRUCT);
 
-    if (editedContactData.ID == std::stoi(pointerToContactData[0])) {
+    if (editedContactData.contactID == std::stoi(pointerToContactData[0])) {
       std::fputs(saveContactToSingleString(editedContactData).c_str(), temporaryFilePointer);
     }
     else {
@@ -354,7 +357,7 @@ int findContactByID(std::vector<Contact>& contacts) {
   targetID = std::stoi(readLine());
 
   for (auto contact: contacts) {
-    if (contact.ID == targetID) {
+    if (contact.contactID == targetID) {
       printContactInfo(contact);
       std::cout << '\n';
       matchingIDFound = true;
@@ -370,12 +373,12 @@ int findContactByID(std::vector<Contact>& contacts) {
 }
 
 int getHighestContactID(std::vector<Contact>& contacts) {
-  return contacts.back().ID;
+  return contacts.back().contactID;
 }
 
 int getContactIndexByID(std::vector<Contact>& contacts, int targetContactID) {
   for (int i = 0; i < contacts.size(); i++) {
-    if (contacts.at(i).ID == targetContactID) {
+    if (contacts.at(i).contactID == targetContactID) {
       return i;
     }
   }
@@ -394,7 +397,7 @@ void listContacts(std::vector<Contact>& contacts, int highestContactID) {
   }
 }
 
-int addContact(std::vector<Contact>& contacts, int highestContactID) {
+int addContact(std::vector<Contact>& contacts, int highestContactID, int userID) {
   std::regex emailRegex("(\\w+)(\\._)?(\\w*)@(\\w+)(\\.(\\w+))+");
   Contact contactToBeAdded;
   std::string contactName, contactSurname, contactEmail, contactAddress, contactPhoneNumber;
@@ -425,7 +428,8 @@ int addContact(std::vector<Contact>& contacts, int highestContactID) {
   contactAddress = readLine();
   contactToBeAdded.address = contactAddress;
 
-  contactToBeAdded.ID = highestContactID + 1;
+  contactToBeAdded.contactID = highestContactID + 1;
+  contactToBeAdded.userID = userID;
 
   saveContactToFile(contactToBeAdded);
 
@@ -567,7 +571,7 @@ void switchToUserLoggedInMenu(int loggedInUserID) {
 
     switch (userLoggedInMenuOption) {
     case USER_LOGGED_IN_MENU_OPTION_ADD_CONTACTS:
-      highestContactID = addContact(contacts, highestContactID);
+      highestContactID = addContact(contacts, highestContactID, loggedInUserID);
       printContactInfo(contacts.back());
       std::system("pause");
       std::system("cls");
