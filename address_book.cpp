@@ -538,12 +538,99 @@ void editContact(std::vector<Contact>& contacts) {
   return;
 }
 
+bool usernameExists(std::vector<UserData>& users, const std::string &usernameToCheck) {
+  for (UserData user: users) {
+    if (user.username == usernameToCheck) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+int getUserIDByUsername(std::vector<UserData>& users, const std::string &usernameToCheck) {
+  for (UserData user: users) {
+    if (user.username == usernameToCheck) {
+      return user.userID;
+    }
+  }
+
+  return 0;
+}
+
+int getUserDataIndexByID(std::vector<UserData>& users, int targetUserID) {
+  for (int i = 0; i < users.size(); i++) {
+    if (users.at(i).userID == targetUserID) {
+      return i;
+    }
+  }
+  
+  return users.size();
+}
+
+int registerUser(std::vector<UserData>& users, int highestUserID) {
+  UserData userToBeAdded;
+  std::string username, userPassword;
+
+  std::cout << "\nEnter username. Press \'Enter\' to continue.\n";
+  username = readLine();
+  userToBeAdded.username = username;
+
+  if (usernameExists(users, username)) {
+    std::cout << "Username already taken. Please try again\n";
+    return highestUserID;
+  }
+  
+  std::cout << "\nEnter password. Press \'Enter\' to continue.\n";
+  userPassword = readLine();
+  userToBeAdded.password = userPassword;
+
+  userToBeAdded.userID = highestUserID + 1;
+
+  saveUserDataToFile(userToBeAdded);
+
+  std::cout << "\nAccount created.\n";
+  users.push_back(userToBeAdded);
+  return ++highestUserID;
+}
+
+int loginUser(std::vector<UserData>& users, int highestUserID) {
+  int loggedInUserID = 0, userDataIndex;
+  std::string username, userPassword;
+
+  if (highestUserID == 0) {
+    std::cout << "\nNo users in the database." << std::endl;
+    return loggedInUserID;
+  }
+
+  std::cout << "\nEnter username. Press \'Enter\' to continue.\n";
+  username = readLine();
+
+  if (!usernameExists(users, username)) {
+    std::cout << "\nUsername is incorrect. Please try again\n";
+    return loggedInUserID;
+  }
+  
+  loggedInUserID = getUserIDByUsername(users, username);
+  userDataIndex = getUserDataIndexByID(users, loggedInUserID);
+
+  std::cout << "\nEnter password. Press \'Enter\' to continue.\n";
+  userPassword = readLine();
+
+  if (userPassword != users[userDataIndex].password) {
+    std::cout << "\nPassword is incorrect. Please try again\n";
+    loggedInUserID = 0;
+  }
+
+  return loggedInUserID;
+}
+
 int main() {
   const char LOGIN_MENU_OPTION_USER_LOGIN = '1', LOGIN_MENU_OPTION_USER_REGISTER = '2';
   const char LOGIN_MENU_OPTION_EXIT_PROGRAM = '3';
 
   std::vector<UserData> users;
-  int highestUserID = readUserDataFromFile(users);
+  int highestUserID = readUserDataFromFile(users), loggedInUserID = 0;
 
   int loginMenuOption;
   bool exitingLoginMenu = false;
@@ -557,9 +644,11 @@ int main() {
 
     switch (loginMenuOption) {
     case LOGIN_MENU_OPTION_USER_LOGIN:
-      // TODO: Implement functionality. Remove line printing after testing.
-      //userID = loginUser();
-      std::cout << "\nSuccessfully logged in. Have good day, user!\n";
+      loggedInUserID = loginUser(users, highestUserID);
+      if (loggedInUserID != 0) {
+        std::cout << "\nSuccessfully logged in. Have good day, user!\n";
+      }
+      
       std::system("pause");
       std::system("cls");
       break;
