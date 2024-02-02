@@ -272,7 +272,6 @@ void removeContactFromFile(int targetContactID) {
   std::rename(TEMP_FILE_NAME, CONTACTS_SAVE_FILE_NAME);
 }
 
-// TODO: Test the function
 void editContactInFile(const Contact &editedContactData) {
   FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "r");
   FILE *temporaryFilePointer = std::fopen(TEMP_FILE_NAME, "a");
@@ -306,6 +305,41 @@ void editContactInFile(const Contact &editedContactData) {
 
   std::remove(CONTACTS_SAVE_FILE_NAME);
   std::rename(TEMP_FILE_NAME, CONTACTS_SAVE_FILE_NAME);
+}
+
+void editUserDataInFile(const UserData &editedUserData) {
+  FILE *filePointer = std::fopen(USER_DATA_SAVE_FILE_NAME, "r");
+  FILE *temporaryFilePointer = std::fopen(TEMP_FILE_NAME, "a");
+  std::string fileLine;
+  std::string *pointerToContactData = nullptr;
+  char buffer[MAX_INPUT_BUFFER_SIZE];
+
+  if (filePointer == NULL || temporaryFilePointer == NULL) {
+    std::cout << "\nError opening file." << std::endl;
+    std::fclose(filePointer);
+    std::fclose(temporaryFilePointer);
+    return;
+  }
+
+  while (std::fgets(buffer, MAX_INPUT_BUFFER_SIZE, filePointer)) {
+    fileLine = std::string(buffer);
+    pointerToContactData = splitDataInFileByVerticalBars(fileLine, NUMBER_OF_MEMBERS_IN_USERDATA_STRUCT);
+
+    if (editedUserData.userID == std::stoi(pointerToContactData[0])) {
+      std::fputs(saveUserDataToSingleString(editedUserData).c_str(), temporaryFilePointer);
+    }
+    else {
+      std::fputs(fileLine.c_str(), temporaryFilePointer);
+    }
+
+    delete[] pointerToContactData;
+  }
+
+  std::fclose(filePointer);
+  std::fclose(temporaryFilePointer);
+
+  std::remove(USER_DATA_SAVE_FILE_NAME);
+  std::rename(TEMP_FILE_NAME, USER_DATA_SAVE_FILE_NAME);
 }
 
 void findContactByName(std::vector<Contact>& contacts) {
@@ -626,7 +660,32 @@ int loginUser(std::vector<UserData>& users, int highestUserID) {
   return loggedInUserID;
 }
 
-void switchToUserLoggedInMenu(int loggedInUserID) {
+void editUserPassword(std::vector<UserData>& users, int userID) {
+  char userConfirmationInput;
+  int userDataIndex;
+
+  if (userID == 0) {
+    return;
+  }
+
+  std::cout << "\nDo you wish to change the password? If yes enter \'y\' to continue." << std::endl;
+  userConfirmationInput = readCharacter();
+
+  if (userConfirmationInput != 'y') {
+    std::cout << "\nOperation aborted. Returning to main menu\n";
+    return;
+  }
+  userDataIndex = getUserDataIndexByID(users, userID);
+
+  std::cout << "\nEnter new password. Press \'Enter\' to continue.\n";
+  users[userDataIndex].password = readLine();
+  editUserDataInFile(users[userDataIndex]);
+
+  std::cout << "\nPassword changed to: " << users[userDataIndex].password << '\n';
+  std::cout << "\nReturning to main menu\n";
+}
+
+void switchToUserLoggedInMenu(std::vector<UserData>& users, int loggedInUserID) {
   if (loggedInUserID == 0) {
     std::cout << "\nUser is not logged in.\n";
     std::system("pause");
@@ -692,8 +751,8 @@ void switchToUserLoggedInMenu(int loggedInUserID) {
     
     case USER_LOGGED_IN_MENU_OPTION_CHANGE_PASSWORD:
       // TODO: Implement functionality. 
-      //changeUserPassword();
-      std::cout << "\nWork in progress. Functionality to change user password will be implemented soon.\n";
+      editUserPassword(users, loggedInUserID);
+      //std::cout << "\nWork in progress. Functionality to change user password will be implemented soon.\n";
       std::system("pause");
       std::system("cls");
       break;
@@ -743,7 +802,7 @@ int main() {
       std::system("cls");
 
       if (userLoggedIn) {
-        switchToUserLoggedInMenu(loggedInUserID);
+        switchToUserLoggedInMenu(users, loggedInUserID);
         loggedInUserID = 0;
         userLoggedIn = false;
       }
