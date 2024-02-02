@@ -372,8 +372,28 @@ int findContactByID(std::vector<Contact>& contacts) {
   return 0;
 }
 
-int getHighestContactID(std::vector<Contact>& contacts) {
-  return contacts.back().contactID;
+int getHighestContactID() {
+  FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "r");
+  std::string fileLine;
+  std::string *pointerToContactData = nullptr;
+  int highestContactID = 0;
+  char buffer[MAX_INPUT_BUFFER_SIZE];
+
+  if (filePointer == NULL) {
+    std::fclose(filePointer);
+    return highestContactID;
+  }
+
+  while (std::fgets(buffer, MAX_INPUT_BUFFER_SIZE, filePointer)) {
+    fileLine = std::string(buffer);
+    pointerToContactData = splitDataInFileByVerticalBars(fileLine, NUMBER_OF_MEMBERS_IN_CONTACT_STRUCT);
+    highestContactID = std::stoi(pointerToContactData[0]);
+    
+    delete[] pointerToContactData;
+  }
+
+  std::fclose(filePointer);
+  return highestContactID;
 }
 
 int getContactIndexByID(std::vector<Contact>& contacts, int targetContactID) {
@@ -443,7 +463,7 @@ int deleteContact(std::vector<Contact>& contacts) {
   char userInput = NULL;
 
   if (contactID == 0) {
-    return contactID;
+    return getHighestContactID();
   }
 
   contactIndex = getContactIndexByID(contacts, contactID);
@@ -453,13 +473,13 @@ int deleteContact(std::vector<Contact>& contacts) {
 
   if (userInput != 'y') {
     std::cout << "\nOperation aborted. Returning to main menu\n";
-    return getHighestContactID(contacts);
+    return getHighestContactID();
   }
 
   contacts.erase(contacts.begin() + contactIndex);
   removeContactFromFile(contactID);
 
-  return getHighestContactID(contacts);
+  return getHighestContactID();
 }
 
 void editContact(std::vector<Contact>& contacts) {
@@ -556,7 +576,6 @@ void switchToUserLoggedInMenu(int loggedInUserID) {
   const char USER_LOGGED_IN_MENU_OPTION_DELETE_CONTACT = '5', USER_LOGGED_IN_MENU_OPTION_EDIT_CONTACT = '6';
   const char USER_LOGGED_IN_MENU_OPTION_CHANGE_PASSWORD = '7', USER_LOGGED_IN_MENU_OPTION_LOGOUT = '8';
 
-  // TODO: Fix bug that changes highestContactID value
   std::vector<Contact> contacts;
   int highestContactID = readContactsFromFile(contacts, loggedInUserID);
 
@@ -567,8 +586,6 @@ void switchToUserLoggedInMenu(int loggedInUserID) {
 
   while (!exitingUserLoggedInMenu) {
     renderUserLoggedInMenu();
-    // TODO: Remove after testing
-    std::cout << "\nHighest contact ID found: " << highestContactID << std::endl;
     userLoggedInMenuOption = readCharacter();
 
     switch (userLoggedInMenuOption) {
