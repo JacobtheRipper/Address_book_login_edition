@@ -750,9 +750,7 @@ void switchToUserLoggedInMenu(std::vector<UserData>& users, int loggedInUserID) 
       break;
     
     case USER_LOGGED_IN_MENU_OPTION_CHANGE_PASSWORD:
-      // TODO: Implement functionality. 
       editUserPassword(users, loggedInUserID);
-      //std::cout << "\nWork in progress. Functionality to change user password will be implemented soon.\n";
       std::system("pause");
       std::system("cls");
       break;

@@ -7,7 +7,7 @@ Working on branches practice
 - User registration to the program
 - User Login to the program
 - Saving & reading user data into and from a save file
-- Option to change user password (WIP)
+- Option to change user password
 - Displaying contacts only available to or created by a user (WIP)  
 - Adding new contacts to a local address book
 - Modifying existing contacts in the local address book
