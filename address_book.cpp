@@ -311,6 +311,41 @@ void editContactInFile(const Contact &editedContactData) {
   std::rename(TEMP_FILE_NAME, CONTACTS_SAVE_FILE_NAME);
 }
 
+void editUserDataInFile(const UserData &editedUserData) {
+  FILE *filePointer = std::fopen(USER_DATA_SAVE_FILE_NAME, "r");
+  FILE *temporaryFilePointer = std::fopen(TEMP_FILE_NAME, "a");
+  std::string fileLine;
+  std::string *pointerToContactData = nullptr;
+  char buffer[MAX_INPUT_BUFFER_SIZE];
+
+  if (filePointer == NULL || temporaryFilePointer == NULL) {
+    std::cout << "\nError opening file." << std::endl;
+    std::fclose(filePointer);
+    std::fclose(temporaryFilePointer);
+    return;
+  }
+
+  while (std::fgets(buffer, MAX_INPUT_BUFFER_SIZE, filePointer)) {
+    fileLine = std::string(buffer);
+    pointerToContactData = splitDataInFileByVerticalBars(fileLine, NUMBER_OF_MEMBERS_IN_USERDATA_STRUCT);
+
+    if (editedUserData.userID == std::stoi(pointerToContactData[0])) {
+      std::fputs(saveUserDataToSingleString(editedUserData).c_str(), temporaryFilePointer);
+    }
+    else {
+      std::fputs(fileLine.c_str(), temporaryFilePointer);
+    }
+
+    delete[] pointerToContactData;
+  }
+
+  std::fclose(filePointer);
+  std::fclose(temporaryFilePointer);
+
+  std::remove(USER_DATA_SAVE_FILE_NAME);
+  std::rename(TEMP_FILE_NAME, USER_DATA_SAVE_FILE_NAME);
+}
+
 void findContactByName(std::vector<Contact>& contacts) {
   std::string nameToFind;
   bool matchingNameFound = false;
@@ -563,93 +598,6 @@ void editContact(std::vector<Contact>& contacts) {
   return;
 }
 
-void switchToUserLoggedInMenu(int loggedInUserID) {
-  if (loggedInUserID == 0) {
-    std::cout << "\nUser is not logged in.\n";
-    std::system("pause");
-    std::system("cls");
-    return;
-  }
-  
-  const char USER_LOGGED_IN_MENU_OPTION_ADD_CONTACTS = '1', USER_LOGGED_IN_MENU_OPTION_SEARCH_BY_NAME = '2';
-  const char USER_LOGGED_IN_MENU_OPTION_SEARCH_BY_SURNAME = '3', USER_LOGGED_IN_MENU_OPTION_LIST_CONTACTS = '4';
-  const char USER_LOGGED_IN_MENU_OPTION_DELETE_CONTACT = '5', USER_LOGGED_IN_MENU_OPTION_EDIT_CONTACT = '6';
-  const char USER_LOGGED_IN_MENU_OPTION_CHANGE_PASSWORD = '7', USER_LOGGED_IN_MENU_OPTION_LOGOUT = '8';
-
-  std::vector<Contact> contacts;
-  int highestContactID = readContactsFromFile(contacts, loggedInUserID);
-
-  int userLoggedInMenuOption;
-  bool exitingUserLoggedInMenu = false;
-
-  std::system("cls");
-
-  while (!exitingUserLoggedInMenu) {
-    renderUserLoggedInMenu();
-    userLoggedInMenuOption = readCharacter();
-
-    switch (userLoggedInMenuOption) {
-    case USER_LOGGED_IN_MENU_OPTION_ADD_CONTACTS:
-      highestContactID = addContact(contacts, highestContactID, loggedInUserID);
-      printContactInfo(contacts.back());
-      std::system("pause");
-      std::system("cls");
-      break;
-
-    case USER_LOGGED_IN_MENU_OPTION_SEARCH_BY_NAME:
-      findContactByName(contacts);
-      std::system("pause");
-      std::system("cls");
-      break;
-
-    case USER_LOGGED_IN_MENU_OPTION_SEARCH_BY_SURNAME:
-      findContactBySurname(contacts);
-      std::system("pause");
-      std::system("cls");
-      break;
-
-    case USER_LOGGED_IN_MENU_OPTION_LIST_CONTACTS:
-      listContacts(contacts, highestContactID);
-      std::system("pause");
-      std::system("cls");
-      break;
-
-    case USER_LOGGED_IN_MENU_OPTION_DELETE_CONTACT:
-      highestContactID = deleteContact(contacts);
-      std::system("pause");
-      std::system("cls");
-      break;
-
-    case USER_LOGGED_IN_MENU_OPTION_EDIT_CONTACT:
-      editContact(contacts);
-      std::system("pause");
-      std::system("cls");
-      break;
-    
-    case USER_LOGGED_IN_MENU_OPTION_CHANGE_PASSWORD:
-      // TODO: Implement functionality. 
-      //changeUserPassword();
-      std::cout << "\nWork in progress. Functionality to change user password will be implemented soon.\n";
-      std::system("pause");
-      std::system("cls");
-      break;
-    
-    case USER_LOGGED_IN_MENU_OPTION_LOGOUT:
-      std::cout << "\nSuccessfully logged out. Have a good day, user!\n";
-      std::system("pause");
-      std::system("cls");
-      exitingUserLoggedInMenu = true;
-      break;
-
-    default:
-      std::cout << "\nIncorrect input. Please try again.\n";
-      std::system("pause");
-      std::system("cls");
-      break;
-    }
-  }
-}
-
 bool usernameExists(std::vector<UserData>& users, const std::string &usernameToCheck) {
   for (UserData user: users) {
     if (user.username == usernameToCheck) {
@@ -737,6 +685,116 @@ int loginUser(std::vector<UserData>& users, int highestUserID) {
   return loggedInUserID;
 }
 
+void editUserPassword(std::vector<UserData>& users, int userID) {
+  char userConfirmationInput;
+  int userDataIndex;
+
+  if (userID == 0) {
+    return;
+  }
+
+  std::cout << "\nDo you wish to change the password? If yes enter \'y\' to continue." << std::endl;
+  userConfirmationInput = readCharacter();
+
+  if (userConfirmationInput != 'y') {
+    std::cout << "\nOperation aborted. Returning to main menu\n";
+    return;
+  }
+  userDataIndex = getUserDataIndexByID(users, userID);
+
+  std::cout << "\nEnter new password. Press \'Enter\' to continue.\n";
+  users[userDataIndex].password = readLine();
+  editUserDataInFile(users[userDataIndex]);
+
+  std::cout << "\nPassword changed to: " << users[userDataIndex].password << '\n';
+  std::cout << "\nReturning to main menu\n";
+}
+
+void switchToUserLoggedInMenu(std::vector<UserData>& users, int loggedInUserID) {
+  if (loggedInUserID == 0) {
+    std::cout << "\nUser is not logged in.\n";
+    std::system("pause");
+    std::system("cls");
+    return;
+  }
+  
+  const char USER_LOGGED_IN_MENU_OPTION_ADD_CONTACTS = '1', USER_LOGGED_IN_MENU_OPTION_SEARCH_BY_NAME = '2';
+  const char USER_LOGGED_IN_MENU_OPTION_SEARCH_BY_SURNAME = '3', USER_LOGGED_IN_MENU_OPTION_LIST_CONTACTS = '4';
+  const char USER_LOGGED_IN_MENU_OPTION_DELETE_CONTACT = '5', USER_LOGGED_IN_MENU_OPTION_EDIT_CONTACT = '6';
+  const char USER_LOGGED_IN_MENU_OPTION_CHANGE_PASSWORD = '7', USER_LOGGED_IN_MENU_OPTION_LOGOUT = '8';
+
+  std::vector<Contact> contacts;
+  int highestContactID = readContactsFromFile(contacts, loggedInUserID);
+
+  int userLoggedInMenuOption;
+  bool exitingUserLoggedInMenu = false;
+
+  std::system("cls");
+
+  while (!exitingUserLoggedInMenu) {
+    renderUserLoggedInMenu();
+    userLoggedInMenuOption = readCharacter();
+
+    switch (userLoggedInMenuOption) {
+    case USER_LOGGED_IN_MENU_OPTION_ADD_CONTACTS:
+      highestContactID = addContact(contacts, highestContactID, loggedInUserID);
+      printContactInfo(contacts.back());
+      std::system("pause");
+      std::system("cls");
+      break;
+
+    case USER_LOGGED_IN_MENU_OPTION_SEARCH_BY_NAME:
+      findContactByName(contacts);
+      std::system("pause");
+      std::system("cls");
+      break;
+
+    case USER_LOGGED_IN_MENU_OPTION_SEARCH_BY_SURNAME:
+      findContactBySurname(contacts);
+      std::system("pause");
+      std::system("cls");
+      break;
+
+    case USER_LOGGED_IN_MENU_OPTION_LIST_CONTACTS:
+      listContacts(contacts, highestContactID);
+      std::system("pause");
+      std::system("cls");
+      break;
+
+    case USER_LOGGED_IN_MENU_OPTION_DELETE_CONTACT:
+      highestContactID = deleteContact(contacts);
+      std::system("pause");
+      std::system("cls");
+      break;
+
+    case USER_LOGGED_IN_MENU_OPTION_EDIT_CONTACT:
+      editContact(contacts);
+      std::system("pause");
+      std::system("cls");
+      break;
+    
+    case USER_LOGGED_IN_MENU_OPTION_CHANGE_PASSWORD:
+      editUserPassword(users, loggedInUserID);
+      std::system("pause");
+      std::system("cls");
+      break;
+    
+    case USER_LOGGED_IN_MENU_OPTION_LOGOUT:
+      std::cout << "\nSuccessfully logged out. Have a good day, user!\n";
+      std::system("pause");
+      std::system("cls");
+      exitingUserLoggedInMenu = true;
+      break;
+
+    default:
+      std::cout << "\nIncorrect input. Please try again.\n";
+      std::system("pause");
+      std::system("cls");
+      break;
+    }
+  }
+}
+
 int main() {
   const char LOGIN_MENU_OPTION_USER_LOGIN = '1', LOGIN_MENU_OPTION_USER_REGISTER = '2';
   const char LOGIN_MENU_OPTION_EXIT_PROGRAM = '3';
@@ -766,7 +824,7 @@ int main() {
       std::system("cls");
 
       if (userLoggedIn) {
-        switchToUserLoggedInMenu(loggedInUserID);
+        switchToUserLoggedInMenu(users, loggedInUserID);
         loggedInUserID = 0;
         userLoggedIn = false;
       }
