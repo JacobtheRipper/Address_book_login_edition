@@ -8,7 +8,7 @@ Working on branches practice
 - User Login to the program
 - Saving & reading user data into and from a save file
 - Option to change user password
-- Displaying contacts only available to or created by a user (WIP)  
+- Displaying contacts only available to or created by a user
 - Adding new contacts to a local address book
 - Modifying existing contacts in the local address book
 - Deleting contacts from local address book
