@@ -6,7 +6,7 @@
 
 #define MAX_INPUT_BUFFER_SIZE 256
 #define NUMBER_OF_MEMBERS_IN_USERDATA_STRUCT 3
-#define NUMBER_OF_MEMBERS_IN_CONTACT_STRUCT 6
+#define NUMBER_OF_MEMBERS_IN_CONTACT_STRUCT 7
 
 #define CONTACTS_SAVE_FILE_NAME "address_book_database.txt"
 #define USER_DATA_SAVE_FILE_NAME "user_database.txt"
@@ -19,7 +19,8 @@ struct UserData {
 };
 
 struct Contact {
-  int ID;
+  int contactID;
+  int userID;
   std::string name;
   std::string surname;
   std::string phoneNumber;
@@ -78,7 +79,7 @@ char readCharacter() {
 }
 
 void printContactInfo(const Contact &contactData) {
-  std::cout << "ID: " << contactData.ID << '\n';
+  std::cout << "ID: " << contactData.contactID << '\n';
   std::cout << "Name: " << contactData.name << '\n';
   std::cout << "Surname: " << contactData.surname << '\n';
   std::cout << "Phone Number: " << contactData.phoneNumber << '\n';
@@ -87,7 +88,7 @@ void printContactInfo(const Contact &contactData) {
 }
 
 void printEditedContactInfo(const Contact &contactData) {
-  std::cout << "\nNew contact data for contact with ID: " << contactData.ID << '\n';
+  std::cout << "\nNew contact data for contact with ID: " << contactData.contactID << '\n';
   printContactInfo(contactData);
   std::cout << "\nReturning to editing menu.\n";
 }
@@ -115,7 +116,9 @@ std::string saveContactToSingleString(const Contact &contactData) {
   std::string output = std::string();
   char delimiterSign = '|';
 
-  output.append(std::to_string(contactData.ID));
+  output.append(std::to_string(contactData.contactID));
+  output.push_back(delimiterSign);
+  output.append(std::to_string(contactData.userID));
   output.push_back(delimiterSign);
   output.append(contactData.name);
   output.push_back(delimiterSign);
@@ -175,8 +178,7 @@ void saveUserDataToFile(const UserData &user) {
   std::fclose(filePointer);
 }
 
-// TODO: Test the function
-int readContactsFromFile(std::vector<Contact>& contacts) {
+int readContactsFromFile(std::vector<Contact>& contacts, int loggedInUserID) {
   FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "r");
   Contact contactExtractedFromFile;
   std::string fileLine;
@@ -192,16 +194,19 @@ int readContactsFromFile(std::vector<Contact>& contacts) {
   while (std::fgets(buffer, MAX_INPUT_BUFFER_SIZE, filePointer)) {
     fileLine = std::string(buffer);
     pointerToContactData = splitDataInFileByVerticalBars(fileLine, NUMBER_OF_MEMBERS_IN_CONTACT_STRUCT);
+    contactExtractedFromFile.contactID = std::stoi(pointerToContactData[0]);
+    contactExtractedFromFile.userID = std::stoi(pointerToContactData[1]);
+    contactExtractedFromFile.name = pointerToContactData[2];
+    contactExtractedFromFile.surname = pointerToContactData[3];
+    contactExtractedFromFile.phoneNumber = pointerToContactData[4];
+    contactExtractedFromFile.email = pointerToContactData[5];
+    contactExtractedFromFile.address = pointerToContactData[6];
 
-    contactExtractedFromFile.ID = std::stoi(pointerToContactData[0]);
-    contactExtractedFromFile.name = pointerToContactData[1];
-    contactExtractedFromFile.surname = pointerToContactData[2];
-    contactExtractedFromFile.phoneNumber = pointerToContactData[3];
-    contactExtractedFromFile.email = pointerToContactData[4];
-    contactExtractedFromFile.address = pointerToContactData[5];
-
-    contacts.push_back(contactExtractedFromFile);
-    highestContactID = contactExtractedFromFile.ID;
+    if (contactExtractedFromFile.userID == loggedInUserID) {
+      contacts.push_back(contactExtractedFromFile);
+    }
+    highestContactID = contactExtractedFromFile.contactID;
+    
     delete[] pointerToContactData;
   }
 
@@ -239,7 +244,6 @@ int readUserDataFromFile(std::vector<UserData>& users) {
   return highestUserID;
 }
 
-// TODO: Test the function
 void removeContactFromFile(int targetContactID) {
   FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "r");
   FILE *temporaryFilePointer = std::fopen(TEMP_FILE_NAME, "a");
@@ -272,7 +276,6 @@ void removeContactFromFile(int targetContactID) {
   std::rename(TEMP_FILE_NAME, CONTACTS_SAVE_FILE_NAME);
 }
 
-// TODO: Test the function
 void editContactInFile(const Contact &editedContactData) {
   FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "r");
   FILE *temporaryFilePointer = std::fopen(TEMP_FILE_NAME, "a");
@@ -291,7 +294,7 @@ void editContactInFile(const Contact &editedContactData) {
     fileLine = std::string(buffer);
     pointerToContactData = splitDataInFileByVerticalBars(fileLine, NUMBER_OF_MEMBERS_IN_CONTACT_STRUCT);
 
-    if (editedContactData.ID == std::stoi(pointerToContactData[0])) {
+    if (editedContactData.contactID == std::stoi(pointerToContactData[0])) {
       std::fputs(saveContactToSingleString(editedContactData).c_str(), temporaryFilePointer);
     }
     else {
@@ -354,7 +357,7 @@ int findContactByID(std::vector<Contact>& contacts) {
   targetID = std::stoi(readLine());
 
   for (auto contact: contacts) {
-    if (contact.ID == targetID) {
+    if (contact.contactID == targetID) {
       printContactInfo(contact);
       std::cout << '\n';
       matchingIDFound = true;
@@ -369,13 +372,33 @@ int findContactByID(std::vector<Contact>& contacts) {
   return 0;
 }
 
-int getHighestContactID(std::vector<Contact>& contacts) {
-  return contacts.back().ID;
+int getHighestContactID() {
+  FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "r");
+  std::string fileLine;
+  std::string *pointerToContactData = nullptr;
+  int highestContactID = 0;
+  char buffer[MAX_INPUT_BUFFER_SIZE];
+
+  if (filePointer == NULL) {
+    std::fclose(filePointer);
+    return highestContactID;
+  }
+
+  while (std::fgets(buffer, MAX_INPUT_BUFFER_SIZE, filePointer)) {
+    fileLine = std::string(buffer);
+    pointerToContactData = splitDataInFileByVerticalBars(fileLine, NUMBER_OF_MEMBERS_IN_CONTACT_STRUCT);
+    highestContactID = std::stoi(pointerToContactData[0]);
+    
+    delete[] pointerToContactData;
+  }
+
+  std::fclose(filePointer);
+  return highestContactID;
 }
 
 int getContactIndexByID(std::vector<Contact>& contacts, int targetContactID) {
   for (int i = 0; i < contacts.size(); i++) {
-    if (contacts.at(i).ID == targetContactID) {
+    if (contacts.at(i).contactID == targetContactID) {
       return i;
     }
   }
@@ -394,7 +417,7 @@ void listContacts(std::vector<Contact>& contacts, int highestContactID) {
   }
 }
 
-int addContact(std::vector<Contact>& contacts, int highestContactID) {
+int addContact(std::vector<Contact>& contacts, int highestContactID, int userID) {
   std::regex emailRegex("(\\w+)(\\._)?(\\w*)@(\\w+)(\\.(\\w+))+");
   Contact contactToBeAdded;
   std::string contactName, contactSurname, contactEmail, contactAddress, contactPhoneNumber;
@@ -425,7 +448,8 @@ int addContact(std::vector<Contact>& contacts, int highestContactID) {
   contactAddress = readLine();
   contactToBeAdded.address = contactAddress;
 
-  contactToBeAdded.ID = highestContactID + 1;
+  contactToBeAdded.contactID = highestContactID + 1;
+  contactToBeAdded.userID = userID;
 
   saveContactToFile(contactToBeAdded);
 
@@ -439,7 +463,7 @@ int deleteContact(std::vector<Contact>& contacts) {
   char userInput = NULL;
 
   if (contactID == 0) {
-    return contactID;
+    return getHighestContactID();
   }
 
   contactIndex = getContactIndexByID(contacts, contactID);
@@ -449,13 +473,13 @@ int deleteContact(std::vector<Contact>& contacts) {
 
   if (userInput != 'y') {
     std::cout << "\nOperation aborted. Returning to main menu\n";
-    return getHighestContactID(contacts);
+    return getHighestContactID();
   }
 
   contacts.erase(contacts.begin() + contactIndex);
   removeContactFromFile(contactID);
 
-  return getHighestContactID(contacts);
+  return getHighestContactID();
 }
 
 void editContact(std::vector<Contact>& contacts) {
@@ -552,9 +576,8 @@ void switchToUserLoggedInMenu(int loggedInUserID) {
   const char USER_LOGGED_IN_MENU_OPTION_DELETE_CONTACT = '5', USER_LOGGED_IN_MENU_OPTION_EDIT_CONTACT = '6';
   const char USER_LOGGED_IN_MENU_OPTION_CHANGE_PASSWORD = '7', USER_LOGGED_IN_MENU_OPTION_LOGOUT = '8';
 
-  // TODO: Make sure that only contacts available to user are added
   std::vector<Contact> contacts;
-  int highestContactID = readContactsFromFile(contacts);
+  int highestContactID = readContactsFromFile(contacts, loggedInUserID);
 
   int userLoggedInMenuOption;
   bool exitingUserLoggedInMenu = false;
@@ -567,7 +590,7 @@ void switchToUserLoggedInMenu(int loggedInUserID) {
 
     switch (userLoggedInMenuOption) {
     case USER_LOGGED_IN_MENU_OPTION_ADD_CONTACTS:
-      highestContactID = addContact(contacts, highestContactID);
+      highestContactID = addContact(contacts, highestContactID, loggedInUserID);
       printContactInfo(contacts.back());
       std::system("pause");
       std::system("cls");
