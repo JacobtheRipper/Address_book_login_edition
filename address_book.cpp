@@ -178,8 +178,7 @@ void saveUserDataToFile(const UserData &user) {
   std::fclose(filePointer);
 }
 
-// TODO: Test the function
-int readContactsFromFile(std::vector<Contact>& contacts) {
+int readContactsFromFile(std::vector<Contact>& contacts, int loggedInUserID) {
   FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "r");
   Contact contactExtractedFromFile;
   std::string fileLine;
@@ -203,8 +202,11 @@ int readContactsFromFile(std::vector<Contact>& contacts) {
     contactExtractedFromFile.email = pointerToContactData[5];
     contactExtractedFromFile.address = pointerToContactData[6];
 
-    contacts.push_back(contactExtractedFromFile);
+    if (contactExtractedFromFile.userID == loggedInUserID) {
+      contacts.push_back(contactExtractedFromFile);
+    }
     highestContactID = contactExtractedFromFile.contactID;
+    
     delete[] pointerToContactData;
   }
 
@@ -242,7 +244,6 @@ int readUserDataFromFile(std::vector<UserData>& users) {
   return highestUserID;
 }
 
-// TODO: Test the function
 void removeContactFromFile(int targetContactID) {
   FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "r");
   FILE *temporaryFilePointer = std::fopen(TEMP_FILE_NAME, "a");
@@ -275,7 +276,6 @@ void removeContactFromFile(int targetContactID) {
   std::rename(TEMP_FILE_NAME, CONTACTS_SAVE_FILE_NAME);
 }
 
-// TODO: Test the function
 void editContactInFile(const Contact &editedContactData) {
   FILE *filePointer = std::fopen(CONTACTS_SAVE_FILE_NAME, "r");
   FILE *temporaryFilePointer = std::fopen(TEMP_FILE_NAME, "a");
@@ -556,9 +556,9 @@ void switchToUserLoggedInMenu(int loggedInUserID) {
   const char USER_LOGGED_IN_MENU_OPTION_DELETE_CONTACT = '5', USER_LOGGED_IN_MENU_OPTION_EDIT_CONTACT = '6';
   const char USER_LOGGED_IN_MENU_OPTION_CHANGE_PASSWORD = '7', USER_LOGGED_IN_MENU_OPTION_LOGOUT = '8';
 
-  // TODO: Make sure that only contacts available to user are added
+  // TODO: Fix bug that changes highestContactID value
   std::vector<Contact> contacts;
-  int highestContactID = readContactsFromFile(contacts);
+  int highestContactID = readContactsFromFile(contacts, loggedInUserID);
 
   int userLoggedInMenuOption;
   bool exitingUserLoggedInMenu = false;
@@ -567,6 +567,8 @@ void switchToUserLoggedInMenu(int loggedInUserID) {
 
   while (!exitingUserLoggedInMenu) {
     renderUserLoggedInMenu();
+    // TODO: Remove after testing
+    std::cout << "\nHighest contact ID found: " << highestContactID << std::endl;
     userLoggedInMenuOption = readCharacter();
 
     switch (userLoggedInMenuOption) {
